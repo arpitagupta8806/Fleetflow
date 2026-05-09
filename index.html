@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FleetFlow — Fleet & Logistics App</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.14.0/tabler-icons.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#111827;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}
+:root{
+  --navy:#0d1b2a;--navy2:#1b2d45;--navy3:#243555;
+  --blue:#3a7bd5;--blue2:#4a90e2;--green:#06d6a0;--green2:#05b888;
+  --orange:#ff6b35;--yellow:#ffd166;--red:#ef476f;
+  --text:#e8f0fe;--muted:#8ba3c7;--border:rgba(58,123,213,0.25);
+}
+.scene{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100vh;}
+.phone-label{color:#6b7280;font-size:13px;font-family:'DM Sans',sans-serif;letter-spacing:0.5px}
+.iphone{
+  width:390px;
+  background:#0d1b2a;
+  border-radius:54px;
+  border:10px solid #1c1c1e;
+  box-shadow:0 0 0 1px #3a3a3c,0 40px 80px rgba(0,0,0,0.8),inset 0 0 0 1px rgba(255,255,255,0.04);
+  position:relative;overflow:hidden;
+  transform-origin:top center;
+  flex-shrink:0;
+}
+.iphone::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:120px;height:34px;background:#1c1c1e;border-radius:0 0 22px 22px;z-index:100;
+}
+.iphone::after{
+  content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;border-radius:50%;background:#111;z-index:101;
+  box-shadow:-28px 0 0 4px #111;
+}
+.phone-inner{
+  height:780px;overflow-y:auto;overflow-x:hidden;
+  border-radius:44px;scroll-behavior:smooth;
+  padding-top:44px;
+}
+.phone-inner::-webkit-scrollbar{width:0}
+
+.screen{display:none;flex-direction:column;min-height:780px}
+.screen.active{display:flex}
+
+.statusbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--navy);
+  padding:0 24px 6px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--muted);font-family:'Sora',sans-serif;
+  padding-top:6px;
+}
+.statusbar-icons{display:flex;gap:5px;align-items:center}
+.header{padding:10px 20px 14px;background:var(--navy)}
+.header-row{display:flex;justify-content:space-between;align-items:center}
+.logo-text{font-family:'Sora',sans-serif;font-size:20px;font-weight:700;color:var(--text)}
+.logo-text span{color:var(--blue)}
+.header-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.avatar-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#6c63ff);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:#fff;border:none;cursor:pointer}
+.notif-btn{width:36px;height:36px;border-radius:50%;background:var(--navy2);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);cursor:pointer;position:relative}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--red);position:absolute;top:6px;right:6px;border:1.5px solid var(--navy)}
+.scroll-content{flex:1;padding-bottom:80px}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
+.stat-card{background:var(--navy2);border-radius:16px;padding:13px;border:1px solid var(--border)}
+.stat-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;font-size:15px}
+.stat-icon.blue{background:rgba(58,123,213,0.2);color:var(--blue2)}
+.stat-icon.green{background:rgba(6,214,160,0.2);color:var(--green)}
+.stat-icon.orange{background:rgba(255,107,53,0.2);color:var(--orange)}
+.stat-icon.yellow{background:rgba(255,209,102,0.2);color:var(--yellow)}
+.stat-val{font-family:'Sora',sans-serif;font-size:21px;font-weight:700;color:var(--text)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px}
+.stat-trend{font-size:10px;margin-top:5px}
+.stat-trend.up{color:var(--green)}
+.stat-trend.dn{color:var(--red)}
+.stat-trend.warn{color:var(--yellow)}
+.sec-head{padding:0 14px 8px;display:flex;justify-content:space-between;align-items:center}
+.sec-head h2{font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+.see-all{font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.map-card{margin:0 14px 14px;border-radius:16px;overflow:hidden;border:1px solid var(--border);height:170px;position:relative;background:var(--navy3);cursor:pointer}
+.map-bg{width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(58,123,213,0.07) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(58,123,213,0.07) 29px),var(--navy3)}
+.map-road-h{position:absolute;height:3px;background:rgba(58,123,213,0.28);left:0;right:0}
+.map-road-v{position:absolute;width:3px;background:rgba(58,123,213,0.28);top:0;bottom:0}
+.map-dot{position:absolute;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid}
+.map-dot.g{background:rgba(6,214,160,0.25);border-color:var(--green)}
+.map-dot.b{background:rgba(58,123,213,0.25);border-color:var(--blue)}
+.map-dot.o{background:rgba(255,107,53,0.25);border-color:var(--orange)}
+.map-label{position:absolute;bottom:8px;left:10px;right:10px;background:rgba(13,27,42,0.88);border-radius:9px;padding:7px 11px;display:flex;justify-content:space-between;align-items:center}
+.map-label span{font-size:10px;color:var(--muted)}
+.map-label strong{font-size:11px;color:var(--text)}
+.qa-grid{padding:0 14px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.qa-btn{background:var(--navy2);border-radius:13px;border:1px solid var(--border);padding:11px 6px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer}
+.qa-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.qa-label{font-size:9px;color:var(--muted);text-align:center;line-height:1.3}
+.alert-card{margin:0 14px 9px;background:rgba(239,71,111,0.1);border:1px solid rgba(239,71,111,0.28);border-radius:13px;padding:11px 13px;display:flex;gap:9px;align-items:flex-start}
+.ok-card{margin:0 14px 9px;background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.28);border-radius:13px;padding:11px 13px;display:flex;gap:9px;align-items:flex-start}
+.al-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.al-title{font-size:12px;font-weight:500;color:var(--text)}
+.al-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.al-time{font-size:9px;margin-top:3px}
+.v-list{padding:0 14px;display:flex;flex-direction:column;gap:9px}
+.v-card{background:var(--navy2);border-radius:14px;padding:12px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer}
+.v-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.v-icon.on{background:rgba(6,214,160,0.12)}
+.v-icon.off{background:rgba(255,107,53,0.12)}
+.v-icon.idle{background:rgba(255,209,102,0.12)}
+.v-info{flex:1;min-width:0}
+.v-name{font-size:13px;font-weight:500;color:var(--text)}
+.v-route{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:9px;font-weight:600;padding:3px 7px;border-radius:6px;font-family:'Sora',sans-serif}
+.badge.on{background:rgba(6,214,160,0.18);color:var(--green)}
+.badge.off{background:rgba(255,107,53,0.18);color:var(--orange)}
+.badge.idle{background:rgba(255,209,102,0.18);color:var(--yellow)}
+.badge.crit{background:rgba(239,71,111,0.18);color:var(--red)}
+.badge.info{background:rgba(58,123,213,0.18);color:var(--blue2)}
+.bottom-nav{position:sticky;bottom:0;background:var(--navy2);border-top:1px solid var(--border);padding:8px 0 20px;display:flex;justify-content:space-around}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:4px 10px}
+.nav-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.nav-btn.active .nav-icon{background:rgba(58,123,213,0.18);color:var(--blue2)}
+.nav-btn:not(.active) .nav-icon{color:var(--muted)}
+.nav-label{font-size:9px;font-weight:500}
+.nav-btn.active .nav-label{color:var(--blue2)}
+.nav-btn:not(.active) .nav-label{color:var(--muted)}
+.seg{margin:0 14px 14px;background:var(--navy2);border-radius:11px;padding:4px;display:flex;gap:4px;border:1px solid var(--border)}
+.seg-btn{flex:1;padding:7px 4px;border-radius:8px;border:none;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all .2s}
+.seg-btn.active{background:var(--blue);color:#fff}
+.seg-btn:not(.active){background:none;color:var(--muted)}
+.route-card{margin:0 14px 11px;background:var(--navy2);border-radius:15px;border:1px solid var(--border);padding:14px}
+.r-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px}
+.r-id{font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--blue)}
+.r-path{display:flex;gap:8px;margin-bottom:11px}
+.r-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.r-dot.s{background:var(--green)}
+.r-dot.e{background:var(--orange)}
+.r-line{width:1px;height:18px;background:var(--border);margin-left:3px}
+.r-loc{font-size:12px;color:var(--text)}
+.r-loc small{display:block;font-size:9px;color:var(--muted);margin-top:1px}
+.r-stats{display:flex;gap:14px}
+.r-stat span{font-size:10px;color:var(--muted)}
+.r-stat strong{font-size:11px;color:var(--text)}
+.maint-card{margin:0 14px 11px;background:var(--navy2);border-radius:15px;border:1px solid var(--border);padding:14px}
+.m-top{display:flex;gap:10px;align-items:center;margin-bottom:11px}
+.m-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.m-icon.warn{background:rgba(255,209,102,0.15)}
+.m-icon.crit{background:rgba(239,71,111,0.15)}
+.m-icon.ok{background:rgba(6,214,160,0.15)}
+.m-name{font-size:13px;font-weight:500;color:var(--text)}
+.m-reg{font-size:10px;color:var(--muted);margin-top:1px}
+.pbar-wrap{margin-bottom:7px}
+.pbar-lbl{display:flex;justify-content:space-between;margin-bottom:4px}
+.pbar-lbl span{font-size:10px;color:var(--muted)}
+.pbar-lbl strong{font-size:10px;color:var(--text)}
+.pbar-bg{background:rgba(255,255,255,0.07);border-radius:4px;height:5px;overflow:hidden}
+.pbar{height:100%;border-radius:4px}
+.pbar.good{background:var(--green)}
+.pbar.warn{background:var(--yellow)}
+.pbar.crit{background:var(--red)}
+.comp-item{margin:0 14px 9px;background:var(--navy2);border-radius:13px;border:1px solid var(--border);padding:13px;display:flex;gap:10px;align-items:center}
+.comp-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.comp-icon.valid{background:rgba(6,214,160,0.15)}
+.comp-icon.expiring{background:rgba(255,209,102,0.15)}
+.comp-icon.expired{background:rgba(239,71,111,0.15)}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 14px 14px}
+.kpi-card{background:var(--navy2);border-radius:13px;border:1px solid var(--border);padding:13px}
+.kpi-label{font-size:9px;color:var(--muted);margin-bottom:5px}
+.kpi-val{font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+.kpi-sub{font-size:9px;margin-top:3px}
+.kpi-sub.up{color:var(--green)}
+.kpi-sub.dn{color:var(--red)}
+.kpi-sub.n{color:var(--muted)}
+.splash-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:780px;background:var(--navy);padding:50px 28px 40px}
+.sp-ico{width:90px;height:90px;border-radius:28px;background:rgba(58,123,213,0.2);border:1px solid rgba(58,123,213,0.35);display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:22px}
+.sp-logo{font-family:'Sora',sans-serif;font-size:38px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-1px}
+.sp-logo span{color:var(--blue)}
+.sp-tag{font-size:13px;color:var(--muted);margin-bottom:36px;text-align:center;line-height:1.5}
+.feature-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:36px}
+.fp{background:rgba(58,123,213,0.12);border:1px solid rgba(58,123,213,0.28);border-radius:20px;padding:5px 12px;font-size:10px;color:var(--blue2);font-family:'DM Sans',sans-serif}
+.inp{width:100%;background:var(--navy2);border:1px solid var(--border);border-radius:13px;padding:13px 15px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none}
+.inp:focus{border-color:var(--blue)}
+.inp::placeholder{color:var(--muted)}
+.cta{width:100%;background:var(--blue);border:none;border-radius:13px;padding:15px;color:#fff;font-size:15px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;margin-top:6px}
+.cta:hover{opacity:.9}
+.ghost{width:100%;background:none;border:1px solid var(--border);border-radius:13px;padding:13px;color:var(--muted);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:9px}
+.pro-header{background:var(--navy2);border-radius:17px;border:1px solid var(--border);padding:18px;display:flex;gap:13px;align-items:center;margin:0 14px 11px}
+.pro-av{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--blue),#6c63ff);display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+.pro-name{font-family:'Sora',sans-serif;font-size:15px;font-weight:600;color:var(--text)}
+.pro-role{font-size:11px;color:var(--blue2);margin-top:1px}
+.pro-loc{font-size:10px;color:var(--muted);margin-top:1px}
+.plan-badge{background:rgba(58,123,213,0.15);border:1px solid rgba(58,123,213,0.3);border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;margin:0 14px 11px}
+.plan-name{font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.plan-tag{font-size:10px;color:var(--blue2);margin-top:1px}
+.upg-btn{background:var(--blue);border:none;border-radius:9px;padding:7px 14px;color:#fff;font-size:11px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer}
+.menu-item{background:var(--navy2);border-radius:13px;border:1px solid var(--border);padding:13px 14px;display:flex;align-items:center;gap:11px;margin:0 14px 7px;cursor:pointer}
+.menu-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.menu-label{flex:1;font-size:13px;color:var(--text)}
+.fuel-bars{display:flex;gap:7px;align-items:flex-end;height:90px;margin-top:11px}
+.fbc{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.fb{width:100%;border-radius:5px 5px 0 0;background:rgba(58,123,213,0.45)}
+.fb.hi{background:var(--green)}
+.fb-lbl{font-size:8px;color:var(--muted)}
+.fuel-wrap{margin:0 14px 14px;background:var(--navy2);border-radius:15px;border:1px solid var(--border);padding:14px}
+.ai-card{margin:0 14px 10px;background:rgba(58,123,213,0.1);border:1px solid rgba(58,123,213,0.28);border-radius:13px;padding:13px}
+.ai-apply{margin-top:7px;background:var(--blue);border:none;border-radius:8px;padding:6px 13px;font-size:11px;color:#fff;font-family:'DM Sans',sans-serif;cursor:pointer}
+.sched-btn{width:100%;margin-top:9px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.35);border-radius:9px;padding:9px;color:var(--red);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer}
+.notif-day{font-size:11px;color:var(--muted);margin-bottom:9px;font-weight:500;padding:0 14px}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="phone-label">FleetFlow · AI Fleet Management · Tap to navigate</div>
+  <div class="iphone">
+    <div class="phone-inner" id="phone-inner">
+
+      <!-- SPLASH -->
+      <div class="screen active" id="screen-splash">
+        <div class="splash-wrap">
+          <div class="sp-ico">🚛</div>
+          <div class="sp-logo">Fleet<span>Flow</span></div>
+          <div class="sp-tag">AI-Powered Fleet &amp; Logistics Management<br>Your Fleet, Your Way</div>
+          <div class="feature-pills">
+            <span class="fp">🤖 AI Routing</span>
+            <span class="fp">📍 Live Tracking</span>
+            <span class="fp">⛽ Fuel Analytics</span>
+            <span class="fp">🔧 Predictive Maintenance</span>
+            <span class="fp">📋 Compliance</span>
+          </div>
+          <input class="inp" placeholder="Email or phone number" type="email"/>
+          <input class="inp" placeholder="Password" type="password"/>
+          <button class="cta" onclick="goTo('home')">Sign In →</button>
+          <button class="ghost" onclick="goTo('home')">Start 20-Day Free Trial</button>
+        </div>
+      </div>
+
+      <!-- HOME -->
+      <div class="screen" id="screen-home">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header">
+          <div class="header-row">
+            <div><div class="logo-text">Fleet<span>Flow</span></div><div class="header-sub">Good morning, Ravi 👋</div></div>
+            <div style="display:flex;gap:8px">
+              <button class="notif-btn" onclick="goTo('alerts')"><i class="ti ti-bell" style="color:var(--muted);font-size:17px"></i><span class="notif-dot"></span></button>
+              <button class="avatar-btn" onclick="goTo('profile')">RS</button>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-icon blue"><i class="ti ti-truck"></i></div><div class="stat-val">28</div><div class="stat-label">Active Vehicles</div><div class="stat-trend up">↑ 4 from yesterday</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-route"></i></div><div class="stat-val">94%</div><div class="stat-label">Route Efficiency</div><div class="stat-trend up">↑ 2.3% this week</div></div>
+            <div class="stat-card"><div class="stat-icon orange"><i class="ti ti-gas-station"></i></div><div class="stat-val">₹2.1L</div><div class="stat-label">Fuel Cost/month</div><div class="stat-trend up">↓ 8% vs last month</div></div>
+            <div class="stat-card"><div class="stat-icon yellow"><i class="ti ti-tool"></i></div><div class="stat-val">3</div><div class="stat-label">Maint. Alerts</div><div class="stat-trend warn">⚠ Review needed</div></div>
+          </div>
+          <div class="sec-head"><h2>Live Fleet Map</h2><button class="see-all" onclick="goTo('tracking')">Full Map →</button></div>
+          <div class="map-card" onclick="goTo('tracking')">
+            <div class="map-bg">
+              <div class="map-road-h" style="top:40%"></div>
+              <div class="map-road-h" style="top:66%"></div>
+              <div class="map-road-v" style="left:30%"></div>
+              <div class="map-road-v" style="left:62%"></div>
+              <svg style="position:absolute;top:0;left:0;width:100%;height:100%" viewBox="0 0 362 170"><polyline points="55,50 95,68 138,68 160,110" stroke="rgba(6,214,160,0.55)" stroke-width="2" fill="none" stroke-dasharray="5,3"/><polyline points="160,110 195,110 248,60" stroke="rgba(58,123,213,0.55)" stroke-width="2" fill="none" stroke-dasharray="5,3"/></svg>
+              <div class="map-dot g" style="top:36px;left:42px">🚛</div>
+              <div class="map-dot b" style="top:96px;left:148px">🚚</div>
+              <div class="map-dot o" style="top:44px;left:236px">🚐</div>
+              <div class="map-dot g" style="top:120px;left:88px">🛻</div>
+              <div class="map-label"><div><span>Vehicles on map</span><br><strong>28 active</strong></div><div style="text-align:right"><span>Last updated</span><br><strong style="color:var(--green)">● Live</strong></div></div>
+            </div>
+          </div>
+          <div class="sec-head"><h2>Quick Actions</h2></div>
+          <div class="qa-grid">
+            <button class="qa-btn" onclick="goTo('routes')"><div class="qa-icon" style="background:rgba(58,123,213,0.18)"><i class="ti ti-route" style="color:var(--blue2)"></i></div><span class="qa-label">Route Optimizer</span></button>
+            <button class="qa-btn" onclick="goTo('maintenance')"><div class="qa-icon" style="background:rgba(255,209,102,0.18)"><i class="ti ti-tool" style="color:var(--yellow)"></i></div><span class="qa-label">Maintenance</span></button>
+            <button class="qa-btn" onclick="goTo('fuel')"><div class="qa-icon" style="background:rgba(255,107,53,0.18)"><i class="ti ti-gas-station" style="color:var(--orange)"></i></div><span class="qa-label">Fuel Mgmt</span></button>
+            <button class="qa-btn" onclick="goTo('compliance')"><div class="qa-icon" style="background:rgba(6,214,160,0.18)"><i class="ti ti-clipboard-check" style="color:var(--green)"></i></div><span class="qa-label">Compliance</span></button>
+          </div>
+          <div class="sec-head"><h2>Recent Alerts</h2><button class="see-all" onclick="goTo('alerts')">View all →</button></div>
+          <div class="alert-card"><span class="al-icon">⚠️</span><div><div class="al-title">Predictive Alert: DL-01-AB-2340</div><div class="al-sub">Engine temp elevated — service recommended within 3 days</div><div class="al-time" style="color:rgba(239,71,111,0.8)">2 hours ago</div></div></div>
+          <div class="ok-card"><span class="al-icon">✅</span><div><div class="al-title" style="color:var(--green)">Route optimized — saved ₹840</div><div class="al-sub">Trip TRP-2041 rerouted via NH-44, 22 min faster</div><div class="al-time" style="color:var(--green);opacity:0.8">15 min ago</div></div></div>
+          <div class="sec-head" style="margin-top:6px"><h2>Fleet Status</h2><button class="see-all" onclick="goTo('tracking')">See all →</button></div>
+          <div class="v-list">
+            <div class="v-card" onclick="goTo('tracking')"><div class="v-icon on">🚛</div><div class="v-info"><div class="v-name">DL-01-AB-2340</div><div class="v-route">Delhi → Gurgaon via NH-48</div></div><span class="badge on">On Route</span></div>
+            <div class="v-card" onclick="goTo('tracking')"><div class="v-icon idle">🚚</div><div class="v-info"><div class="v-name">MH-12-CD-5521</div><div class="v-route">Idle at Depot — Pune</div></div><span class="badge idle">Idle</span></div>
+            <div class="v-card" onclick="goTo('tracking')"><div class="v-icon off">🛻</div><div class="v-info"><div class="v-name">KA-09-EF-7732</div><div class="v-route">Service scheduled today</div></div><span class="badge off">In Service</span></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn active" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- TRACKING -->
+      <div class="screen" id="screen-tracking">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Live Tracking</div><div class="header-sub">● 28 vehicles active</div></div></div><button style="background:rgba(58,123,213,0.18);border:1px solid rgba(58,123,213,0.35);border-radius:9px;padding:6px 11px;cursor:pointer;font-size:11px;color:var(--blue2);font-family:'DM Sans',sans-serif">Filter</button></div></div>
+        <div class="scroll-content">
+          <div style="margin:0 14px 14px;border-radius:15px;overflow:hidden;border:1px solid var(--border);height:210px;position:relative">
+            <div class="map-bg" style="height:210px">
+              <div class="map-road-h" style="top:35%"></div><div class="map-road-h" style="top:62%"></div><div class="map-road-h" style="top:80%"></div>
+              <div class="map-road-v" style="left:25%"></div><div class="map-road-v" style="left:58%"></div><div class="map-road-v" style="left:82%"></div>
+              <svg style="position:absolute;top:0;left:0;width:100%;height:100%" viewBox="0 0 362 210"><polyline points="46,74 95,74 134,130" stroke="rgba(6,214,160,0.6)" stroke-width="2.5" fill="none" stroke-dasharray="6,3"/><polyline points="134,130 182,130 266,74" stroke="rgba(58,123,213,0.6)" stroke-width="2.5" fill="none" stroke-dasharray="6,3"/><polyline points="88,173 134,173 182,130" stroke="rgba(255,107,53,0.5)" stroke-width="2" fill="none" stroke-dasharray="4,3"/></svg>
+              <div class="map-dot g" style="top:56px;left:46px">🚛</div>
+              <div class="map-dot b" style="top:108px;left:144px">🚚</div>
+              <div class="map-dot o" style="top:58px;left:252px">🚐</div>
+              <div class="map-dot g" style="top:152px;left:88px">🛻</div>
+              <div class="map-dot b" style="top:78px;left:186px;width:22px;height:22px;font-size:11px">🚌</div>
+              <div style="position:absolute;top:9px;right:9px;background:rgba(13,27,42,0.9);border-radius:8px;padding:5px 9px;border:1px solid var(--border)"><span style="font-size:10px;color:var(--green)">● Live</span></div>
+            </div>
+          </div>
+          <div class="seg">
+            <button class="seg-btn active">All (30)</button>
+            <button class="seg-btn" onclick="this.parentNode.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Active (28)</button>
+            <button class="seg-btn" onclick="this.parentNode.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Idle (2)</button>
+          </div>
+          <div class="v-list">
+            <div class="v-card"><div class="v-icon on">🚛</div><div class="v-info"><div class="v-name">DL-01-AB-2340</div><div class="v-route">Delhi → Gurgaon · 67 km/h · ETA 14:35</div></div><span class="badge on">Moving</span></div>
+            <div class="v-card"><div class="v-icon on">🚚</div><div class="v-info"><div class="v-name">MH-12-CD-5521</div><div class="v-route">Pune → Nashik · 72 km/h · ETA 16:10</div></div><span class="badge on">Moving</span></div>
+            <div class="v-card"><div class="v-icon idle">🚐</div><div class="v-info"><div class="v-name">KA-09-GH-1190</div><div class="v-route">Idle at Whitefield, Bengaluru · 18 min</div></div><span class="badge idle">Idle</span></div>
+            <div class="v-card"><div class="v-icon on">🛻</div><div class="v-info"><div class="v-name">TN-11-JK-3344</div><div class="v-route">Chennai → Vellore · 58 km/h · ETA 15:50</div></div><span class="badge on">Moving</span></div>
+            <div class="v-card"><div class="v-icon on">🚌</div><div class="v-info"><div class="v-name">UP-78-MN-2209</div><div class="v-route">Lucknow → Kanpur · 61 km/h · ETA 13:20</div></div><span class="badge on">Moving</span></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn active"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- ROUTES -->
+      <div class="screen" id="screen-routes">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Route Optimizer</div><div class="header-sub">AI-powered routing engine</div></div></div><button style="background:var(--blue);border:none;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:11px;color:#fff;font-family:'Sora',sans-serif;font-weight:600">+ New Trip</button></div></div>
+        <div class="scroll-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-icon blue"><i class="ti ti-route"></i></div><div class="stat-val">142</div><div class="stat-label">Trips Today</div><div class="stat-trend up">↑ 12 vs yesterday</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-clock"></i></div><div class="stat-val">22 min</div><div class="stat-label">Avg Time Saved</div><div class="stat-trend up">↑ AI optimized</div></div>
+          </div>
+          <div class="seg"><button class="seg-btn active">Active</button><button class="seg-btn" onclick="this.parentNode.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Pending</button><button class="seg-btn" onclick="this.parentNode.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Completed</button></div>
+          <div class="route-card">
+            <div class="r-top"><span class="r-id">TRP-2041</span><span class="badge on">Active</span></div>
+            <div class="r-path">
+              <div style="display:flex;flex-direction:column;align-items:center"><div class="r-dot s"></div><div class="r-line"></div><div class="r-dot e"></div></div>
+              <div style="display:flex;flex-direction:column;gap:13px;flex:1"><div class="r-loc">Connaught Place, Delhi<small>Departure: 08:30 AM</small></div><div class="r-loc">Cyber City, Gurgaon<small>ETA: 14:35 PM</small></div></div>
+            </div>
+            <div class="r-stats"><div class="r-stat"><i class="ti ti-truck" style="font-size:13px;color:var(--muted)"></i><span> Driver:</span><strong> Ramesh K.</strong></div><div class="r-stat"><i class="ti ti-map" style="font-size:13px;color:var(--muted)"></i><span> 42 km</span></div><div class="r-stat"><i class="ti ti-gas-station" style="font-size:13px;color:var(--green)"></i><strong style="color:var(--green)"> ₹840 saved</strong></div></div>
+          </div>
+          <div class="route-card">
+            <div class="r-top"><span class="r-id">TRP-2042</span><span class="badge idle">Pending</span></div>
+            <div class="r-path">
+              <div style="display:flex;flex-direction:column;align-items:center"><div class="r-dot s"></div><div class="r-line"></div><div class="r-dot e"></div></div>
+              <div style="display:flex;flex-direction:column;gap:13px;flex:1"><div class="r-loc">Koramangala, Bengaluru<small>Departure: 11:00 AM</small></div><div class="r-loc">Electronic City, Bengaluru<small>ETA: 12:20 PM</small></div></div>
+            </div>
+            <div class="r-stats"><div class="r-stat"><i class="ti ti-truck" style="font-size:13px;color:var(--muted)"></i><span> Suresh M.</span></div><div class="r-stat"><i class="ti ti-map" style="font-size:13px;color:var(--muted)"></i><span> 18 km</span></div><div class="r-stat"><i class="ti ti-sparkles" style="font-size:13px;color:var(--blue2)"></i><strong style="color:var(--blue2)"> AI Optimal</strong></div></div>
+          </div>
+          <div class="route-card">
+            <div class="r-top"><span class="r-id">TRP-2039</span><span class="badge info">Done</span></div>
+            <div class="r-path">
+              <div style="display:flex;flex-direction:column;align-items:center"><div class="r-dot s"></div><div class="r-line"></div><div class="r-dot e"></div></div>
+              <div style="display:flex;flex-direction:column;gap:13px;flex:1"><div class="r-loc">Bandra, Mumbai<small>Departed: 06:15 AM</small></div><div class="r-loc">Navi Mumbai<small>Arrived: 08:45 AM</small></div></div>
+            </div>
+            <div class="r-stats"><div class="r-stat"><i class="ti ti-truck" style="font-size:13px;color:var(--muted)"></i><span> Vijay R.</span></div><div class="r-stat"><i class="ti ti-map" style="font-size:13px;color:var(--muted)"></i><span> 31 km</span></div><div class="r-stat"><i class="ti ti-clock" style="font-size:13px;color:var(--green)"></i><span style="color:var(--green)"> 2h 30m</span></div></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn active"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- FUEL -->
+      <div class="screen" id="screen-fuel">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Fuel Management</div><div class="header-sub">AI consumption analytics</div></div></div></div></div>
+        <div class="scroll-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-icon orange"><i class="ti ti-gas-station"></i></div><div class="stat-val">8.4L</div><div class="stat-label">Avg / 100km</div><div class="stat-trend up">↓ 0.6L improved</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-currency-rupee"></i></div><div class="stat-val">₹18K</div><div class="stat-label">Monthly Saved</div><div class="stat-trend up">↑ AI optimization</div></div>
+          </div>
+          <div class="sec-head"><h2>Weekly Consumption</h2><button class="see-all">May 2025</button></div>
+          <div class="fuel-wrap">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:var(--muted)">Liters per day (fleet total)</span><span style="font-size:10px;color:var(--green)">● AI Optimized</span></div>
+            <div class="fuel-bars">
+              <div class="fbc"><div class="fb" style="height:65px"></div><span class="fb-lbl">Mon</span></div>
+              <div class="fbc"><div class="fb" style="height:82px"></div><span class="fb-lbl">Tue</span></div>
+              <div class="fbc"><div class="fb hi" style="height:50px"></div><span class="fb-lbl">Wed</span></div>
+              <div class="fbc"><div class="fb" style="height:72px"></div><span class="fb-lbl">Thu</span></div>
+              <div class="fbc"><div class="fb" style="height:88px"></div><span class="fb-lbl">Fri</span></div>
+              <div class="fbc"><div class="fb" style="height:55px"></div><span class="fb-lbl">Sat</span></div>
+              <div class="fbc"><div class="fb" style="height:36px"></div><span class="fb-lbl">Sun</span></div>
+            </div>
+            <div style="margin-top:8px"><span style="font-size:9px;color:var(--muted)">Wed lowest — AI rerouting active</span></div>
+          </div>
+          <div class="sec-head"><h2>Top Fuel Consumers</h2></div>
+          <div class="v-list">
+            <div class="v-card"><div class="v-icon on">🚛</div><div class="v-info"><div class="v-name">DL-01-AB-2340</div><div class="v-route">9.2L/100km · ₹4,200 this month</div></div><span style="font-size:10px;color:var(--orange);font-weight:600">High</span></div>
+            <div class="v-card"><div class="v-icon on">🚚</div><div class="v-info"><div class="v-name">MH-12-CD-5521</div><div class="v-route">8.1L/100km · ₹3,650 this month</div></div><span style="font-size:10px;color:var(--yellow);font-weight:600">Avg</span></div>
+            <div class="v-card"><div class="v-icon on">🛻</div><div class="v-info"><div class="v-name">TN-11-JK-3344</div><div class="v-route">7.4L/100km · ₹2,890 this month</div></div><span style="font-size:10px;color:var(--green);font-weight:600">Good</span></div>
+          </div>
+          <div class="sec-head" style="margin-top:6px"><h2>AI Recommendation</h2></div>
+          <div class="ai-card"><div style="display:flex;gap:9px;align-items:flex-start"><span style="font-size:17px">🤖</span><div><div style="font-size:12px;font-weight:500;color:var(--text)">Switch DL-01-AB-2340 to NH-44 alternate route</div><div style="font-size:10px;color:var(--muted);margin-top:3px">Est. saving: 1.2L/trip · ₹12,000/month across 300 trips</div><button class="ai-apply">Apply Suggestion</button></div></div></div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn active"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- MAINTENANCE -->
+      <div class="screen" id="screen-maintenance">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Predictive Maintenance</div><div class="header-sub">AI health monitoring</div></div></div></div></div>
+        <div class="scroll-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-icon" style="background:rgba(239,71,111,0.18)"><i class="ti ti-alert-triangle" style="color:var(--red)"></i></div><div class="stat-val">3</div><div class="stat-label">Critical Alerts</div><div class="stat-trend dn">Immediate action</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-check"></i></div><div class="stat-val">94%</div><div class="stat-label">Fleet Health</div><div class="stat-trend up">↑ Good overall</div></div>
+          </div>
+          <div class="sec-head"><h2>Vehicle Health Status</h2></div>
+          <div class="maint-card">
+            <div class="m-top"><div class="m-icon crit">🚛</div><div><div class="m-name">DL-01-AB-2340</div><div class="m-reg">Tata Prima · Delhi Fleet</div></div><span class="badge crit" style="margin-left:auto">Critical</span></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Engine Health</span><strong>38%</strong></div><div class="pbar-bg"><div class="pbar crit" style="width:38%"></div></div></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Tire Wear</span><strong>55%</strong></div><div class="pbar-bg"><div class="pbar warn" style="width:55%"></div></div></div>
+            <div style="margin-top:9px;background:rgba(239,71,111,0.1);border-radius:9px;padding:9px;border:1px solid rgba(239,71,111,0.2)"><div style="font-size:11px;color:var(--red);font-weight:500">⚠ AI Alert: Engine temp elevated. Service within 3 days.</div></div>
+            <button class="sched-btn">Schedule Service →</button>
+          </div>
+          <div class="maint-card">
+            <div class="m-top"><div class="m-icon warn">🚚</div><div><div class="m-name">MH-12-CD-5521</div><div class="m-reg">Ashok Leyland · Pune Fleet</div></div><span class="badge idle" style="margin-left:auto">Moderate</span></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Engine Health</span><strong>72%</strong></div><div class="pbar-bg"><div class="pbar warn" style="width:72%"></div></div></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Brake Pads</span><strong>65%</strong></div><div class="pbar-bg"><div class="pbar warn" style="width:65%"></div></div></div>
+            <div style="margin-top:5px;font-size:10px;color:var(--muted)">Next service in 12 days · 1,400 km</div>
+          </div>
+          <div class="maint-card">
+            <div class="m-top"><div class="m-icon ok">🛻</div><div><div class="m-name">TN-11-JK-3344</div><div class="m-reg">Mahindra Bolero · Chennai</div></div><span class="badge on" style="margin-left:auto">Healthy</span></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Overall Health</span><strong>89%</strong></div><div class="pbar-bg"><div class="pbar good" style="width:89%"></div></div></div>
+            <div class="pbar-wrap"><div class="pbar-lbl"><span>Oil Level</span><strong>82%</strong></div><div class="pbar-bg"><div class="pbar good" style="width:82%"></div></div></div>
+            <div style="margin-top:5px;font-size:10px;color:var(--green)">✓ All systems normal · Next service in 45 days</div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- COMPLIANCE -->
+      <div class="screen" id="screen-compliance">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Compliance Center</div><div class="header-sub">Regulatory document tracker</div></div></div><button style="background:var(--blue);border:none;border-radius:9px;padding:6px 11px;cursor:pointer;font-size:11px;color:#fff;font-family:'Sora',sans-serif;font-weight:600">+ Upload</button></div></div>
+        <div class="scroll-content">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-clipboard-check"></i></div><div class="stat-val">86%</div><div class="stat-label">Compliance Rate</div><div class="stat-trend up">↑ Fleet compliant</div></div>
+            <div class="stat-card"><div class="stat-icon yellow"><i class="ti ti-alert-circle"></i></div><div class="stat-val">4</div><div class="stat-label">Expiring Soon</div><div class="stat-trend warn">Within 30 days</div></div>
+          </div>
+          <div class="sec-head"><h2>Document Status</h2></div>
+          <div class="comp-item"><div class="comp-icon expiring">📋</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">Insurance Certificate</div><div style="font-size:10px;color:var(--muted);margin-top:2px">DL-01-AB-2340 · Expires in 12 days</div></div><span class="badge idle">Expiring</span></div>
+          <div class="comp-item"><div class="comp-icon expired">🚗</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">PUC Certificate</div><div style="font-size:10px;color:var(--muted);margin-top:2px">MH-12-CD-5521 · Expired 3 days ago</div></div><span class="badge crit">Expired</span></div>
+          <div class="comp-item"><div class="comp-icon valid">✅</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">Fitness Certificate</div><div style="font-size:10px;color:var(--muted);margin-top:2px">KA-09-GH-1190 · Valid till Dec 2025</div></div><span class="badge on">Valid</span></div>
+          <div class="comp-item"><div class="comp-icon valid">📄</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">Road Tax</div><div style="font-size:10px;color:var(--muted);margin-top:2px">TN-11-JK-3344 · Valid till Mar 2026</div></div><span class="badge on">Valid</span></div>
+          <div class="comp-item"><div class="comp-icon expiring">🪪</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">Driver License (Ravi K.)</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Commercial · Expires in 28 days</div></div><span class="badge idle">Expiring</span></div>
+          <div class="comp-item"><div class="comp-icon valid">🏷️</div><div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text)">Registration Certificate</div><div style="font-size:10px;color:var(--muted);margin-top:2px">All 30 vehicles · Valid</div></div><span class="badge on">Valid</span></div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="screen" id="screen-alerts">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="display:flex;align-items:center;gap:9px"><button onclick="goTo('home')" style="background:var(--navy2);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ti ti-arrow-left" style="color:var(--text);font-size:15px"></i></button><div><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Notifications</div><div class="header-sub">8 unread alerts</div></div></div><button style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-family:'DM Sans',sans-serif">Clear all</button></div></div>
+        <div class="scroll-content" style="padding:14px 0 80px">
+          <div class="notif-day">Today</div>
+          <div class="alert-card"><span class="al-icon">⚠️</span><div><div class="al-title">Engine Alert: DL-01-AB-2340</div><div class="al-sub">Elevated engine temperature detected by IoT sensor</div><div class="al-time" style="color:rgba(239,71,111,0.8)">2 hours ago</div></div></div>
+          <div class="ok-card"><span class="al-icon">✅</span><div><div class="al-title" style="color:var(--green)">Route Saved ₹840 — TRP-2041</div><div class="al-sub">AI rerouted via NH-44, 22 min faster delivery</div><div class="al-time" style="color:var(--green);opacity:0.8">15 min ago</div></div></div>
+          <div class="alert-card"><span class="al-icon">📋</span><div><div class="al-title">Insurance Expiring: DL-01-AB-2340</div><div class="al-sub">Certificate expires in 12 days — renew to stay compliant</div><div class="al-time" style="color:rgba(239,71,111,0.8)">1 hour ago</div></div></div>
+          <div class="notif-day" style="margin-top:14px">Yesterday</div>
+          <div class="ok-card"><span class="al-icon">⛽</span><div><div class="al-title" style="color:var(--green)">Fuel cost down 8% this month</div><div class="al-sub">AI optimization saved ₹18,000 vs last month</div><div class="al-time" style="color:var(--green);opacity:0.8">Yesterday 6:00 PM</div></div></div>
+          <div class="alert-card"><span class="al-icon">🚛</span><div><div class="al-title">MH-12-CD-5521 idling 42 min</div><div class="al-sub">Excessive idle time at Pune depot</div><div class="al-time" style="color:rgba(239,71,111,0.8)">Yesterday 2:30 PM</div></div></div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn" onclick="goTo('profile')"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="screen" id="screen-profile">
+        <div class="statusbar"><span style="font-weight:600">9:41</span><div class="statusbar-icons"><i class="ti ti-wifi" style="font-size:12px"></i><i class="ti ti-battery-2" style="font-size:12px"></i></div></div>
+        <div class="header"><div class="header-row"><div style="font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--text)">Profile &amp; Settings</div><button onclick="goTo('splash')" style="background:rgba(239,71,111,0.12);border:1px solid rgba(239,71,111,0.28);border-radius:9px;padding:6px 11px;cursor:pointer;font-size:11px;color:var(--red);font-family:'DM Sans',sans-serif">Sign Out</button></div></div>
+        <div class="scroll-content">
+          <div class="pro-header"><div class="pro-av">RS</div><div><div class="pro-name">Ravi Sharma</div><div class="pro-role">Fleet Manager · Delhi</div><div class="pro-loc">📍 Delhi, India · 30 vehicles</div></div></div>
+          <div class="plan-badge"><div><div class="plan-name">Pro Plan</div><div class="plan-tag">₹2,499/month · Up to 25 vehicles</div></div><button class="upg-btn">Upgrade →</button></div>
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Vehicle Utilization</div><div class="kpi-val">93%</div><div class="kpi-sub up">↑ 4% this week</div></div>
+            <div class="kpi-card"><div class="kpi-label">Delivery Accuracy</div><div class="kpi-val">97%</div><div class="kpi-sub up">On-time rate</div></div>
+            <div class="kpi-card"><div class="kpi-label">Idle Time Avg</div><div class="kpi-val">8 min</div><div class="kpi-sub n">Per vehicle</div></div>
+            <div class="kpi-card"><div class="kpi-label">Monthly Savings</div><div class="kpi-val">₹18K</div><div class="kpi-sub up">AI optimized</div></div>
+          </div>
+          <div class="menu-item" onclick="goTo('compliance')"><div class="menu-ico" style="background:rgba(6,214,160,0.15)"><i class="ti ti-clipboard-check" style="color:var(--green)"></i></div><span class="menu-label">Compliance Center</span><span style="font-size:9px;background:rgba(239,71,111,0.18);color:var(--red);padding:2px 7px;border-radius:5px;font-weight:600;margin-right:6px">4 alerts</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+          <div class="menu-item" onclick="goTo('maintenance')"><div class="menu-ico" style="background:rgba(255,209,102,0.15)"><i class="ti ti-tool" style="color:var(--yellow)"></i></div><span class="menu-label">Maintenance Schedule</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+          <div class="menu-item"><div class="menu-ico" style="background:rgba(58,123,213,0.15)"><i class="ti ti-users" style="color:var(--blue2)"></i></div><span class="menu-label">Driver Management</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+          <div class="menu-item"><div class="menu-ico" style="background:rgba(108,99,255,0.15)"><i class="ti ti-chart-bar" style="color:#a78bfa"></i></div><span class="menu-label">Reports &amp; Analytics</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+          <div class="menu-item"><div class="menu-ico" style="background:rgba(255,107,53,0.15)"><i class="ti ti-headset" style="color:var(--orange)"></i></div><span class="menu-label">24/7 Support</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+          <div class="menu-item" style="margin-bottom:0"><div class="menu-ico" style="background:rgba(139,163,199,0.12)"><i class="ti ti-settings" style="color:var(--muted)"></i></div><span class="menu-label">App Settings</span><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></div>
+        </div>
+        <div class="bottom-nav">
+          <button class="nav-btn" onclick="goTo('home')"><div class="nav-icon"><i class="ti ti-home"></i></div><span class="nav-label">Home</span></button>
+          <button class="nav-btn" onclick="goTo('tracking')"><div class="nav-icon"><i class="ti ti-map-pin"></i></div><span class="nav-label">Tracking</span></button>
+          <button class="nav-btn" onclick="goTo('routes')"><div class="nav-icon"><i class="ti ti-route"></i></div><span class="nav-label">Routes</span></button>
+          <button class="nav-btn" onclick="goTo('fuel')"><div class="nav-icon"><i class="ti ti-gas-station"></i></div><span class="nav-label">Fuel</span></button>
+          <button class="nav-btn active"><div class="nav-icon"><i class="ti ti-user"></i></div><span class="nav-label">Profile</span></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="phone-label" style="margin-top:4px">Made with ❤️ for Arpita Gupta · IIT Mandi MBA 2025</div>
+</div>
+
+<script>
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  var t=document.getElementById('screen-'+id);
+  if(t){
+    t.classList.add('active');
+    var inner=document.getElementById('phone-inner');
+    if(inner)inner.scrollTop=0;
+  }
+}
+</script>
+<script>
+function scalePhone(){
+  var phone=document.querySelector('.iphone');
+  var label=document.querySelector('.phone-label');
+  if(!phone)return;
+  var phoneH=800; // natural height including border
+  var phoneW=410; // natural width including border
+  var vw=window.innerWidth;
+  var vh=window.innerHeight;
+  var labelH=label?label.offsetHeight+8:0;
+  var availH=vh-40; // 20px padding top+bottom
+  var availW=vw-40;
+  var scaleH=(availH-labelH)/phoneH;
+  var scaleW=availW/phoneW;
+  var scale=Math.min(scaleH,scaleW,1);
+  phone.style.transform='scale('+scale+')';
+  phone.style.marginBottom=((scale-1)*phoneH)+'px';
+}
+window.addEventListener('resize',scalePhone);
+scalePhone();
+</script>
+</body>
+</html>
